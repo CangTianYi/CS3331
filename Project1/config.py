@@ -1,11 +1,11 @@
 # config.py
 import os
 
-# ¶¨ÒåÏîÄ¿¸ùÄ¿Â¼
+# å®šä¹‰é¡¹ç›®æ ¹ç›®å½•
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# PRD 4.2: Êı¾İ´æ´¢ÔÚ items.csv
+# PRD 4.2: æ•°æ®å­˜å‚¨åœ¨ items.csv
 ITEMS_CSV_PATH = os.path.join(BASE_DIR, "items.csv")
 
-# PRD 4.2: CSV ÎÄ¼ş¹æ·¶
+# PRD 4.2: CSV æ–‡ä»¶è§„èŒƒ
 CSV_HEADERS = ['id', 'name', 'description', 'contact_info']

@@ -1,5 +1,5 @@
 # views/add_item_dialog.py
-# ÇĞ»»µ½ PyQt5: from PyQt5.QtWidgets import ...
+# åˆ‡æ¢åˆ° PyQt5: from PyQt5.QtWidgets import ...
 from PyQt6.QtWidgets import (
     QDialog, QLineEdit, QTextEdit, QPushButton, QFormLayout, 
     QVBoxLayout, QDialogButtonBox, QMessageBox
@@ -8,13 +8,13 @@ from PyQt6.QtCore import Qt
 
 class AddItemDialog(QDialog):
     """
-    PRD 3.2: Ìí¼ÓÎïÆ·¶Ô»°¿ò (View)
-    ÕâÊÇÒ»¸öÄ£Ê½¶Ô»°¿ò (QDialog)£¬Ö»¸ºÔğ UI ²¼¾ÖºÍ»ñÈ¡ÓÃ»§ÊäÈë¡£
+    PRD 3.2: æ·»åŠ ç‰©å“å¯¹è¯æ¡† (View)
+    è¿™æ˜¯ä¸€ä¸ªæ¨¡å¼å¯¹è¯æ¡† (QDialog)ï¼Œåªè´Ÿè´£ UI å¸ƒå±€å’Œè·å–ç”¨æˆ·è¾“å…¥ã€‚
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Ìí¼ÓĞÂÎïÆ·")
-        # PRD FR-002: Ä£Ê½¶Ô»°¿ò
+        self.setWindowTitle("æ·»åŠ æ–°ç‰©å“")
+        # PRD FR-002: æ¨¡å¼å¯¹è¯æ¡†
         self.setModal(True)
         self.setMinimumWidth(350)
         
@@ -23,36 +23,36 @@ class AddItemDialog(QDialog):
     def setup_ui(self):
         layout = QVBoxLayout(self)
         
-        # PRD 3.2: ±íµ¥²¼¾Ö (QFormLayout)
+        # PRD 3.2: è¡¨å•å¸ƒå±€ (QFormLayout)
         form_layout = QFormLayout()
 
-        # PRD 3.2: ¿Ø¼ş
+        # PRD 3.2: æ§ä»¶
         self.name_edit = QLineEdit()
         self.desc_edit = QTextEdit()
         self.contact_edit = QLineEdit()
         
-        # PRD FR-002: ÌáÊ¾±ØÌîÏî
-        form_layout.addRow("ÎïÆ·Ãû³Æ (*):", self.name_edit)
-        form_layout.addRow("ÎïÆ·ÃèÊö:", self.desc_edit)
-        form_layout.addRow("ÁªÏµĞÅÏ¢ (*):", self.contact_edit)
+        # PRD FR-002: æç¤ºå¿…å¡«é¡¹
+        form_layout.addRow("ç‰©å“åç§° (*):", self.name_edit)
+        form_layout.addRow("ç‰©å“æè¿°:", self.desc_edit)
+        form_layout.addRow("è”ç³»ä¿¡æ¯ (*):", self.contact_edit)
 
         layout.addLayout(form_layout)
 
-        # PRD 3.2: µ×²¿°´Å¥ (Ê¹ÓÃ±ê×¼°´Å¥ºĞ)
+        # PRD 3.2: åº•éƒ¨æŒ‰é’® (ä½¿ç”¨æ ‡å‡†æŒ‰é’®ç›’)
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
-        self.button_box.button(QDialogButtonBox.StandardButton.Save).setText("±£´æ")
-        self.button_box.button(QDialogButtonBox.StandardButton.Cancel).setText("È¡Ïû")
+        self.button_box.button(QDialogButtonBox.StandardButton.Save).setText("ä¿å­˜")
+        self.button_box.button(QDialogButtonBox.StandardButton.Cancel).setText("å–æ¶ˆ")
 
-        # Á¬½Ó "±£´æ" ºÍ "È¡Ïû" ĞÅºÅ
-        self.button_box.accepted.connect(self.accept) # ÄÚÖÃµÄ "accept"
-        self.button_box.rejected.connect(self.reject) # ÄÚÖÃµÄ "reject"
+        # è¿æ¥ "ä¿å­˜" å’Œ "å–æ¶ˆ" ä¿¡å·
+        self.button_box.accepted.connect(self.accept) # å†…ç½®çš„ "accept"
+        self.button_box.rejected.connect(self.reject) # å†…ç½®çš„ "reject"
 
         layout.addWidget(self.button_box)
 
     def get_data(self) -> dict:
-        """¸¨Öú·½·¨£º´Ó±íµ¥¿Ø¼şÖĞ»ñÈ¡Êı¾İ¡£"""
+        """è¾…åŠ©æ–¹æ³•ï¼šä»è¡¨å•æ§ä»¶ä¸­è·å–æ•°æ®ã€‚"""
         return {
             "name": self.name_edit.text().strip(),
             "description": self.desc_edit.toPlainText().strip(),
@@ -60,21 +60,21 @@ class AddItemDialog(QDialog):
         }
 
     def validate_input(self) -> bool:
-        """PRD FR-002: Ğ£Ñé±ØÌîÏî¡£"""
+        """PRD FR-002: æ ¡éªŒå¿…å¡«é¡¹ã€‚"""
         data = self.get_data()
         if not data["name"] or not data["contact"]:
             return False
         return True
 
-    # ÖØĞ´ accept() ·½·¨ÒÔÔÚ "±£´æ" Ê±¼ÓÈëĞ£Ñé
+    # é‡å†™ accept() æ–¹æ³•ä»¥åœ¨ "ä¿å­˜" æ—¶åŠ å…¥æ ¡éªŒ
     def accept(self):
         if self.validate_input():
-            # Ğ£ÑéÍ¨¹ı£¬µ÷ÓÃ¸¸ÀàµÄ accept()£¬¹Ø±Õ¶Ô»°¿ò²¢·µ»Ø QDialog.DialogCode.Accepted
+            # æ ¡éªŒé€šè¿‡ï¼Œè°ƒç”¨çˆ¶ç±»çš„ accept()ï¼Œå…³é—­å¯¹è¯æ¡†å¹¶è¿”å› QDialog.DialogCode.Accepted
             super().accept()
         else:
-            # Ğ£ÑéÊ§°Ü£¬ÏÔÊ¾¾¯¸æ£¬²»¹Ø±Õ¶Ô»°¿ò
+            # æ ¡éªŒå¤±è´¥ï¼Œæ˜¾ç¤ºè­¦å‘Šï¼Œä¸å…³é—­å¯¹è¯æ¡†
             QMessageBox.warning(
                 self, 
-                "ĞÅÏ¢²»ÍêÕû", 
-                "¡°ÎïÆ·Ãû³Æ¡±ºÍ¡°ÁªÏµĞÅÏ¢¡±ÊÇ±ØÌîÏî¡£"
+                "ä¿¡æ¯ä¸å®Œæ•´", 
+                "â€œç‰©å“åç§°â€å’Œâ€œè”ç³»ä¿¡æ¯â€æ˜¯å¿…å¡«é¡¹ã€‚"
             )

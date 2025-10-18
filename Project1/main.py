@@ -1,20 +1,20 @@
 # main.py
 import sys
-# ÇĞ»»µ½ PyQt5: from PyQt5.QtWidgets import QApplication
+# åˆ‡æ¢åˆ° PyQt5: from PyQt5.QtWidgets import QApplication
 from PyQt6.QtWidgets import QApplication
 
 from controllers.main_controller import MainController
 
 if __name__ == "__main__":
-    # 1. ´´½¨ QApplication ÊµÀı
+    # 1. åˆ›å»º QApplication å®ä¾‹
     app = QApplication(sys.argv)
     
-    # 2. PRD 4.3: ÊµÀı»¯ Controller
-    # Controller ½«¸ºÔğÊµÀı»¯ Model ºÍ View
+    # 2. PRD 4.3: å®ä¾‹åŒ– Controller
+    # Controller å°†è´Ÿè´£å®ä¾‹åŒ– Model å’Œ View
     controller = MainController()
     
-    # 3. ÔËĞĞ Controller (Ëü»á¸ºÔğÏÔÊ¾ View)
+    # 3. è¿è¡Œ Controller (å®ƒä¼šè´Ÿè´£æ˜¾ç¤º View)
     controller.run()
     
-    # 4. Æô¶¯Ó¦ÓÃ³ÌĞòµÄÊÂ¼şÑ­»·
+    # 4. å¯åŠ¨åº”ç”¨ç¨‹åºçš„äº‹ä»¶å¾ªç¯
     sys.exit(app.exec())

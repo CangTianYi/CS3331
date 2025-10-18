@@ -7,46 +7,46 @@ from config import ITEMS_CSV_PATH, CSV_HEADERS
 
 class CsvDataManager:
     """
-    PRD 4.3: Model (Êı¾İÄ£ĞÍ²ã)
-    ¸ºÔğ´¦Àí items.csv µÄËùÓĞ¶ÁĞ´Âß¼­¡£
-    ÍêÈ«¶ÀÁ¢ÓÚ UI (PyQt)¡£
+    PRD 4.3: Model (æ•°æ®æ¨¡å‹å±‚)
+    è´Ÿè´£å¤„ç† items.csv çš„æ‰€æœ‰è¯»å†™é€»è¾‘ã€‚
+    å®Œå…¨ç‹¬ç«‹äº UI (PyQt)ã€‚
     """
     def __init__(self):
         self.data_file = ITEMS_CSV_PATH
         self.headers = CSV_HEADERS
-        # PRD 4.2.2: ÄÚ´æÖĞµÄÊı¾İÁĞ±í (List of Dictionaries)
+        # PRD 4.2.2: å†…å­˜ä¸­çš„æ•°æ®åˆ—è¡¨ (List of Dictionaries)
         self._items_cache: List[Dict[str, str]] = []
         
         self._initialize_data_file()
         self.load_data()
 
     def _initialize_data_file(self):
-        """Èç¹û items.csv ²»´æÔÚ£¬Ôò´´½¨Ëü²¢Ğ´Èë±íÍ·¡£"""
+        """å¦‚æœ items.csv ä¸å­˜åœ¨ï¼Œåˆ™åˆ›å»ºå®ƒå¹¶å†™å…¥è¡¨å¤´ã€‚"""
         if not os.path.exists(self.data_file):
             try:
                 with open(self.data_file, 'w', newline='', encoding='utf-8') as f:
                     writer = csv.writer(f)
-                    # PRD 4.2: Ğ´ÈëÊı¾İÁĞ (Headers)
+                    # PRD 4.2: å†™å…¥æ•°æ®åˆ— (Headers)
                     writer.writerow(self.headers)
             except IOError as e:
                 print(f"Error initializing data file {self.data_file}: {e}")
-                # ÔÚÊµ¼ÊÓ¦ÓÃÖĞ£¬ÕâÀïÓ¦¸ÃÏòÓÃ»§ÏÔÊ¾Ò»¸ö´íÎó
+                # åœ¨å®é™…åº”ç”¨ä¸­ï¼Œè¿™é‡Œåº”è¯¥å‘ç”¨æˆ·æ˜¾ç¤ºä¸€ä¸ªé”™è¯¯
     
     def load_data(self):
         """
-        PRD 4.2.2: ¶ÁÈ¡ (Load)
-        ³ÌĞòÆô¶¯Ê±£¬Ò»´ÎĞÔ½« CSV ¶ÁÈëÄÚ´æÖĞµÄ _items_cache¡£
+        PRD 4.2.2: è¯»å– (Load)
+        ç¨‹åºå¯åŠ¨æ—¶ï¼Œä¸€æ¬¡æ€§å°† CSV è¯»å…¥å†…å­˜ä¸­çš„ _items_cacheã€‚
         """
         self._items_cache = []
         try:
             with open(self.data_file, 'r', newline='', encoding='utf-8') as f:
-                # PRD 4.2.2: ±ØĞëÊ¹ÓÃ csv.DictReader
+                # PRD 4.2.2: å¿…é¡»ä½¿ç”¨ csv.DictReader
                 reader = csv.DictReader(f)
                 
-                # ½¡È«ĞÔ¼ì²é£ºÈ·±£±íÍ·Æ¥Åä
+                # å¥å…¨æ€§æ£€æŸ¥ï¼šç¡®ä¿è¡¨å¤´åŒ¹é…
                 if reader.fieldnames != self.headers:
                     print(f"Warning: CSV header mismatch. Re-initializing file.")
-                    # Èç¹û±íÍ·Ëğ»µ»ò²»Æ¥Åä£¬ÔòÖØ½¨ÎÄ¼ş
+                    # å¦‚æœè¡¨å¤´æŸåæˆ–ä¸åŒ¹é…ï¼Œåˆ™é‡å»ºæ–‡ä»¶
                     self._initialize_data_file()
                     return
 
@@ -57,31 +57,31 @@ class CsvDataManager:
             self._initialize_data_file()
         except Exception as e:
             print(f"Error loading data: {e}")
-            # ´Ë´¦Ó¦ÓĞ¸ü½¡×³µÄ´íÎó´¦Àí
+            # æ­¤å¤„åº”æœ‰æ›´å¥å£®çš„é”™è¯¯å¤„ç†
 
     def save_data(self):
         """
-        PRD 4.2.2: Ğ´Èë (Save)
-        ½«ÍêÕûµÄÄÚ´æÁĞ±í (_items_cache) ¸²¸ÇĞ´»Ø (Overwrite) items.csv ÎÄ¼ş¡£
+        PRD 4.2.2: å†™å…¥ (Save)
+        å°†å®Œæ•´çš„å†…å­˜åˆ—è¡¨ (_items_cache) è¦†ç›–å†™å› (Overwrite) items.csv æ–‡ä»¶ã€‚
         """
         try:
             with open(self.data_file, 'w', newline='', encoding='utf-8') as f:
-                # PRD 4.2.2: ±ØĞëÊ¹ÓÃ csv.DictWriter
+                # PRD 4.2.2: å¿…é¡»ä½¿ç”¨ csv.DictWriter
                 writer = csv.DictWriter(f, fieldnames=self.headers)
                 writer.writeheader()
                 writer.writerows(self._items_cache)
         except IOError as e:
             print(f"Error saving data: {e}")
-            # ´Ë´¦Ó¦ÏòÓÃ»§ÏÔÊ¾±£´æÊ§°ÜµÄ´íÎó
+            # æ­¤å¤„åº”å‘ç”¨æˆ·æ˜¾ç¤ºä¿å­˜å¤±è´¥çš„é”™è¯¯
 
     def get_all_items(self) -> List[Dict[str, str]]:
-        """»ñÈ¡ÄÚ´æÖĞµÄËùÓĞÎïÆ·ÁĞ±í¡£"""
+        """è·å–å†…å­˜ä¸­çš„æ‰€æœ‰ç‰©å“åˆ—è¡¨ã€‚"""
         return self._items_cache
 
     def add_item(self, name: str, description: str, contact_info: str) -> Dict[str, str]:
         """
-        FR-002: Ìí¼ÓÎïÆ·
-        PRD 4.2.1: IDµÄÉú³É (Ê¹ÓÃ UUID)
+        FR-002: æ·»åŠ ç‰©å“
+        PRD 4.2.1: IDçš„ç”Ÿæˆ (ä½¿ç”¨ UUID)
         """
         new_id = uuid.uuid4().hex
         new_item = {
@@ -90,15 +90,15 @@ class CsvDataManager:
             'description': description,
             'contact_info': contact_info
         }
-        # 1. ¸üĞÂÄÚ´æÁĞ±í
+        # 1. æ›´æ–°å†…å­˜åˆ—è¡¨
         self._items_cache.append(new_item)
-        # 2. Controller ½«¸ºÔğµ÷ÓÃ save_data() À´³Ö¾Ã»¯
+        # 2. Controller å°†è´Ÿè´£è°ƒç”¨ save_data() æ¥æŒä¹…åŒ–
         return new_item
 
     def delete_item(self, item_id: str) -> bool:
         """
-        FR-003 & PRD 4.2.3: É¾³ı²Ù×÷
-        ´ÓÄÚ´æÁĞ±íÖĞÒÆ³ıÖ¸¶¨ id µÄÏî¡£
+        FR-003 & PRD 4.2.3: åˆ é™¤æ“ä½œ
+        ä»å†…å­˜åˆ—è¡¨ä¸­ç§»é™¤æŒ‡å®š id çš„é¡¹ã€‚
         """
         item_to_delete = None
         for item in self._items_cache:
@@ -107,17 +107,17 @@ class CsvDataManager:
                 break
         
         if item_to_delete:
-            # 1. ´ÓÄÚ´æÁĞ±íÖĞÒÆ³ı
+            # 1. ä»å†…å­˜åˆ—è¡¨ä¸­ç§»é™¤
             self._items_cache.remove(item_to_delete)
-            # 2. Controller ½«¸ºÔğµ÷ÓÃ save_data()
+            # 2. Controller å°†è´Ÿè´£è°ƒç”¨ save_data()
             return True
         
-        return False # Î´ÕÒµ½¸Ã ID
+        return False # æœªæ‰¾åˆ°è¯¥ ID
 
     def search_items(self, keyword: str) -> List[Dict[str, str]]:
         """
-        FR-004 & PRD 4.2.4: ËÑË÷²Ù×÷
-        ÔÚÄÚ´æÖĞÉ¸Ñ¡ name »ò description °üº¬¹Ø¼ü´ÊµÄÏî¡£
+        FR-004 & PRD 4.2.4: æœç´¢æ“ä½œ
+        åœ¨å†…å­˜ä¸­ç­›é€‰ name æˆ– description åŒ…å«å…³é”®è¯çš„é¡¹ã€‚
         """
         if not keyword:
             return self.get_all_items()
@@ -125,7 +125,7 @@ class CsvDataManager:
         keyword_lower = keyword.lower()
         results = []
         for item in self._items_cache:
-            # PRD 4.0: Ä£ºıÆ¥Åä
+            # PRD 4.0: æ¨¡ç³ŠåŒ¹é…
             name_match = keyword_lower in item['name'].lower()
             desc_match = keyword_lower in item['description'].lower()
             if name_match or desc_match:

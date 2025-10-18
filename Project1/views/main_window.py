@@ -1,5 +1,6 @@
 # views/main_window.py
-# ÇĞ»»µ½ PyQt5: from PyQt5.QtWidgets import ...; from PyQt5.QtCore import pyqtSignal
+# åˆ‡æ¢åˆ° PyQt5: from PyQt5.QtWidgets import ...; from PyQt5.QtCore import pyqtSignal
+from typing import List, Dict, Optional
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit,
     QTableWidget, QAbstractItemView, QHeaderView, QLabel, QTableWidgetItem
@@ -8,186 +9,186 @@ from PyQt6.QtCore import pyqtSignal, Qt
 
 class MainWindow(QWidget):
     """
-    PRD 3.1: Ö÷´°¿Ú (View)
-    Ö»¸ºÔğ UI ²¼¾ÖºÍÏÔÊ¾£¬Í¨¹ı signals (ĞÅºÅ) Óë Controller Í¨ĞÅ¡£
+    PRD 3.1: ä¸»çª—å£ (View)
+    åªè´Ÿè´£ UI å¸ƒå±€å’Œæ˜¾ç¤ºï¼Œé€šè¿‡ signals (ä¿¡å·) ä¸ Controller é€šä¿¡ã€‚
     """
     
-    # --- Îª Controller ¶¨ÒåµÄĞÅºÅ ---
-    # µ±ÓÃ»§µã»÷ "Ìí¼Ó" °´Å¥Ê±·¢³ö
+    # --- ä¸º Controller å®šä¹‰çš„ä¿¡å· ---
+    # å½“ç”¨æˆ·ç‚¹å‡» "æ·»åŠ " æŒ‰é’®æ—¶å‘å‡º
     add_item_requested = pyqtSignal()
-    # µ±ÓÃ»§È·ÈÏ "É¾³ı" °´Å¥Ê±·¢³ö£¬Ğ¯´øÒªÉ¾³ıµÄ item_id
+    # å½“ç”¨æˆ·ç¡®è®¤ "åˆ é™¤" æŒ‰é’®æ—¶å‘å‡ºï¼Œæºå¸¦è¦åˆ é™¤çš„ item_id
     delete_item_requested = pyqtSignal(str) 
-    # µ±ÓÃ»§µã»÷ "ËÑË÷" °´Å¥Ê±·¢³ö£¬Ğ¯´ø¹Ø¼ü´Ê
+    # å½“ç”¨æˆ·ç‚¹å‡» "æœç´¢" æŒ‰é’®æ—¶å‘å‡ºï¼Œæºå¸¦å…³é”®è¯
     search_requested = pyqtSignal(str)
-    # µ±ÓÃ»§µã»÷ "Çå³ı" °´Å¥Ê±·¢³ö
+    # å½“ç”¨æˆ·ç‚¹å‡» "æ¸…é™¤" æŒ‰é’®æ—¶å‘å‡º
     clear_search_requested = pyqtSignal()
     
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Ğ£Ô°ÏÌÓã V1.0")
+        self.setWindowTitle("æ ¡å›­å’¸é±¼ V1.0")
         self.setGeometry(200, 200, 700, 500) # x, y, width, height
         
-        # ÄÚ²¿Ó³Éä£¬ÓÃÓÚ¸ù¾İ±í¸ñĞĞºÅ²éÕÒÕæÊµµÄ data 'id'
+        # å†…éƒ¨æ˜ å°„ï¼Œç”¨äºæ ¹æ®è¡¨æ ¼è¡Œå·æŸ¥æ‰¾çœŸå®çš„ data 'id'
         # [ { 'id': 'uuid1', 'name': '...' }, ... ]
         self._table_item_ids: List[str] = []
 
         self.setup_ui()
 
     def setup_ui(self):
-        # PRD 3.1: ´¹Ö±Á÷Ê½²¼¾Ö
+        # PRD 3.1: å‚ç›´æµå¼å¸ƒå±€
         main_layout = QVBoxLayout(self)
 
-        # --- PRD 3.1: ¶¥²¿ÇøÓò (¹¤¾ßÀ¸/ËÑË÷) ---
+        # --- PRD 3.1: é¡¶éƒ¨åŒºåŸŸ (å·¥å…·æ /æœç´¢) ---
         search_layout = QHBoxLayout()
-        search_layout.addWidget(QLabel("ËÑË÷£º"))
+        search_layout.addWidget(QLabel("æœç´¢ï¼š"))
         
-        # PRD FR-004: ËÑË÷¿ò
+        # PRD FR-004: æœç´¢æ¡†
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("ËÑË÷ÎïÆ·Ãû³Æ»òÃèÊö...")
+        self.search_input.setPlaceholderText("æœç´¢ç‰©å“åç§°æˆ–æè¿°...")
         search_layout.addWidget(self.search_input)
         
-        # PRD FR-004: ËÑË÷°´Å¥
-        self.search_button = QPushButton("ËÑË÷")
+        # PRD FR-004: æœç´¢æŒ‰é’®
+        self.search_button = QPushButton("æœç´¢")
         search_layout.addWidget(self.search_button)
         
-        # PRD FR-004: Çå³ı°´Å¥
-        self.clear_search_button = QPushButton("Çå³ıËÑË÷")
+        # PRD FR-004: æ¸…é™¤æŒ‰é’®
+        self.clear_search_button = QPushButton("æ¸…é™¤æœç´¢")
         search_layout.addWidget(self.clear_search_button)
         
         main_layout.addLayout(search_layout)
 
-        # --- PRD 3.1: ÖĞ²¿ÇøÓò (ÄÚÈİÇø) ---
-        # PRD 3.1: Ê¹ÓÃ QTableWidget
+        # --- PRD 3.1: ä¸­éƒ¨åŒºåŸŸ (å†…å®¹åŒº) ---
+        # PRD 3.1: ä½¿ç”¨ QTableWidget
         self.table_widget = QTableWidget()
-        # PRD 3.1: ±í¸ñÁĞ
+        # PRD 3.1: è¡¨æ ¼åˆ—
         self.table_widget.setColumnCount(3)
-        self.table_widget.setHorizontalHeaderLabels(["ÎïÆ·Ãû³Æ", "ÎïÆ·ÃèÊö", "ÁªÏµÈËĞÅÏ¢"])
+        self.table_widget.setHorizontalHeaderLabels(["ç‰©å“åç§°", "ç‰©å“æè¿°", "è”ç³»äººä¿¡æ¯"])
         
-        # --- UI/UX ÓÅ»¯ (·ûºÏ PRD ¼ò½à·ç¸ñ) ---
-        # PRD FR-003: ±ØĞëÄÜ¹»Ñ¡ÖĞÒ»¸öÎïÆ· (ÉèÖÃÎªÑ¡ÖĞÕûĞĞ)
+        # --- UI/UX ä¼˜åŒ– (ç¬¦åˆ PRD ç®€æ´é£æ ¼) ---
+        # PRD FR-003: å¿…é¡»èƒ½å¤Ÿé€‰ä¸­ä¸€ä¸ªç‰©å“ (è®¾ç½®ä¸ºé€‰ä¸­æ•´è¡Œ)
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        # ½öÔÊĞíµ¥Ñ¡
+        # ä»…å…è®¸å•é€‰
         self.table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        # ½ûÖ¹±à¼­
+        # ç¦æ­¢ç¼–è¾‘
         self.table_widget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        # Òş²Ø´¹Ö±±íÍ· (ĞĞºÅ)
+        # éšè—å‚ç›´è¡¨å¤´ (è¡Œå·)
         self.table_widget.verticalHeader().setVisible(False)
-        # ÔÊĞíÅÅĞò
+        # å…è®¸æ’åº
         self.table_widget.setSortingEnabled(True)
         
-        # PRD 3.1: ÁĞ¿íÉèÖÃ
+        # PRD 3.1: åˆ—å®½è®¾ç½®
         header = self.table_widget.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive) # Ãû³Æ¿ÉÍÏ¶¯
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) # ÃèÊö×ÔÊÊÓ¦
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive) # ÁªÏµÈË¿ÉÍÏ¶¯
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive) # åç§°å¯æ‹–åŠ¨
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) # æè¿°è‡ªé€‚åº”
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive) # è”ç³»äººå¯æ‹–åŠ¨
         
-        # PRD FR-001: Õ¼¾İÖ÷Òª¿Õ¼ä
+        # PRD FR-001: å æ®ä¸»è¦ç©ºé—´
         main_layout.addWidget(self.table_widget)
 
-        # --- PRD 3.1: µ×²¿ÇøÓò (²Ù×÷À¸) ---
+        # --- PRD 3.1: åº•éƒ¨åŒºåŸŸ (æ“ä½œæ ) ---
         action_layout = QHBoxLayout()
         
-        # PRD FR-002: Ìí¼Ó°´Å¥
-        self.add_button = QPushButton("Ìí¼ÓĞÂÎïÆ·...")
+        # PRD FR-002: æ·»åŠ æŒ‰é’®
+        self.add_button = QPushButton("æ·»åŠ æ–°ç‰©å“...")
         action_layout.addWidget(self.add_button)
         
-        # PRD FR-003: É¾³ı°´Å¥
-        self.delete_button = QPushButton("É¾³ıÑ¡ÖĞÎïÆ·")
-        # PRD 3.1: Ä¬ÈÏ½ûÓÃ
+        # PRD FR-003: åˆ é™¤æŒ‰é’®
+        self.delete_button = QPushButton("åˆ é™¤é€‰ä¸­ç‰©å“")
+        # PRD 3.1: é»˜è®¤ç¦ç”¨
         self.delete_button.setEnabled(False) 
         action_layout.addWidget(self.delete_button)
         
-        action_layout.addStretch() # ½«°´Å¥ÍÆÏò×ó²à
+        action_layout.addStretch() # å°†æŒ‰é’®æ¨å‘å·¦ä¾§
         main_layout.addLayout(action_layout)
 
-        # --- ÄÚ²¿ĞÅºÅÓë²ÛµÄÁ¬½Ó ---
-        # µ±±í¸ñÑ¡Ôñ±ä»¯Ê±£¬¸üĞÂ "É¾³ı" °´Å¥µÄ×´Ì¬
+        # --- å†…éƒ¨ä¿¡å·ä¸æ§½çš„è¿æ¥ ---
+        # å½“è¡¨æ ¼é€‰æ‹©å˜åŒ–æ—¶ï¼Œæ›´æ–° "åˆ é™¤" æŒ‰é’®çš„çŠ¶æ€
         self.table_widget.selectionModel().selectionChanged.connect(self.on_selection_changed)
         
-        # --- Á¬½Ó View ¿Ø¼şµ½ "pyqtSignal" ---
-        # (Controller ½«»á¼àÌıÕâĞ© pyqtSignal)
+        # --- è¿æ¥ View æ§ä»¶åˆ° "pyqtSignal" ---
+        # (Controller å°†ä¼šç›‘å¬è¿™äº› pyqtSignal)
         self.add_button.clicked.connect(self.add_item_requested)
         self.search_button.clicked.connect(self.on_search_clicked)
-        # PRD FR-004: Ö§³Ö»Ø³µËÑË÷
+        # PRD FR-004: æ”¯æŒå›è½¦æœç´¢
         self.search_input.returnPressed.connect(self.on_search_clicked)
         self.clear_search_button.clicked.connect(self.on_clear_search_clicked)
         self.delete_button.clicked.connect(self.on_delete_clicked)
 
-    # --- ÄÚ²¿²Ûº¯Êı (Private Slots) ---
+    # --- å†…éƒ¨æ§½å‡½æ•° (Private Slots) ---
 
     def on_selection_changed(self):
-        """PRD 3.1: Ñ¡ÖĞÁĞ±íÏîºó¼¤»î (É¾³ı°´Å¥)¡£"""
-        # ¼ì²éÊÇ·ñÓĞÈÎºÎÏî±»Ñ¡ÖĞ
+        """PRD 3.1: é€‰ä¸­åˆ—è¡¨é¡¹åæ¿€æ´» (åˆ é™¤æŒ‰é’®)ã€‚"""
+        # æ£€æŸ¥æ˜¯å¦æœ‰ä»»ä½•é¡¹è¢«é€‰ä¸­
         is_item_selected = bool(self.table_widget.selectionModel().selectedRows())
         self.delete_button.setEnabled(is_item_selected)
 
     def on_search_clicked(self):
-        """µ±µã»÷ËÑË÷»ò°´»Ø³µÊ±£¬·¢³ö search_requested ĞÅºÅ¡£"""
+        """å½“ç‚¹å‡»æœç´¢æˆ–æŒ‰å›è½¦æ—¶ï¼Œå‘å‡º search_requested ä¿¡å·ã€‚"""
         term = self.get_search_term()
         self.search_requested.emit(term)
         
     def on_clear_search_clicked(self):
-        """µ±µã»÷Çå³ıÊ±£¬Çå¿ÕÊäÈë¿ò²¢·¢³ö clear_search_requested ĞÅºÅ¡£"""
+        """å½“ç‚¹å‡»æ¸…é™¤æ—¶ï¼Œæ¸…ç©ºè¾“å…¥æ¡†å¹¶å‘å‡º clear_search_requested ä¿¡å·ã€‚"""
         self.clear_search_input()
         self.clear_search_requested.emit()
 
     def on_delete_clicked(self):
-        """µ±µã»÷É¾³ıÊ±£¬»ñÈ¡Ñ¡ÖĞÏîµÄ ID£¬²¢·¢³ö delete_item_requested ĞÅºÅ¡£"""
+        """å½“ç‚¹å‡»åˆ é™¤æ—¶ï¼Œè·å–é€‰ä¸­é¡¹çš„ IDï¼Œå¹¶å‘å‡º delete_item_requested ä¿¡å·ã€‚"""
         item_id = self.get_selected_item_id()
         if item_id:
             self.delete_item_requested.emit(item_id)
 
-    # --- ¹«¹²·½·¨ (Public Methods for Controller) ---
+    # --- å…¬å…±æ–¹æ³• (Public Methods for Controller) ---
 
     def update_table(self, items: List[Dict[str, str]]):
         """
-        FR-001: ÎïÆ·ÁĞ±íÕ¹Ê¾¡£
-        ÓÉ Controller µ÷ÓÃ£¬ÓÃ´«ÈëµÄÊı¾İË¢ĞÂ±í¸ñ¡£
+        FR-001: ç‰©å“åˆ—è¡¨å±•ç¤ºã€‚
+        ç”± Controller è°ƒç”¨ï¼Œç”¨ä¼ å…¥çš„æ•°æ®åˆ·æ–°è¡¨æ ¼ã€‚
         """
-        # ÔİÊ±½ûÓÃÅÅĞòÒÔÌá¸ß²åÈëĞÔÄÜ
+        # æš‚æ—¶ç¦ç”¨æ’åºä»¥æé«˜æ’å…¥æ€§èƒ½
         self.table_widget.setSortingEnabled(False)
         
-        self.table_widget.setRowCount(0) # Çå¿Õ±í¸ñ
-        self._table_item_ids = [] # Çå¿Õ ID Ó³Éä
+        self.table_widget.setRowCount(0) # æ¸…ç©ºè¡¨æ ¼
+        self._table_item_ids = [] # æ¸…ç©º ID æ˜ å°„
         
         for item in items:
             row_position = self.table_widget.rowCount()
             self.table_widget.insertRow(row_position)
             
-            # PRD 4.2.3: ´æ´¢ ID ÓÃÓÚÉ¾³ı (µ«²»ÏÔÊ¾)
+            # PRD 4.2.3: å­˜å‚¨ ID ç”¨äºåˆ é™¤ (ä½†ä¸æ˜¾ç¤º)
             self._table_item_ids.append(item['id'])
             
-            # Ìî³ä±í¸ñ (PRD FR-001: Ãû³Æ, ÃèÊö, ÁªÏµÈË)
+            # å¡«å……è¡¨æ ¼ (PRD FR-001: åç§°, æè¿°, è”ç³»äºº)
             self.table_widget.setItem(row_position, 0, QTableWidgetItem(item['name']))
             self.table_widget.setItem(row_position, 1, QTableWidgetItem(item['description']))
             self.table_widget.setItem(row_position, 2, QTableWidgetItem(item['contact_info']))
 
-        # ÖØĞÂÆôÓÃÅÅĞò
+        # é‡æ–°å¯ç”¨æ’åº
         self.table_widget.setSortingEnabled(True)
-        # Ë¢ĞÂºó£¬Ñ¡Ôñ±»Çå³ı£¬È·±£É¾³ı°´Å¥±»½ûÓÃ
+        # åˆ·æ–°åï¼Œé€‰æ‹©è¢«æ¸…é™¤ï¼Œç¡®ä¿åˆ é™¤æŒ‰é’®è¢«ç¦ç”¨
         self.on_selection_changed()
 
     def get_search_term(self) -> str:
-        """»ñÈ¡ËÑË÷¿òÖĞµÄÎÄ±¾¡£"""
+        """è·å–æœç´¢æ¡†ä¸­çš„æ–‡æœ¬ã€‚"""
         return self.search_input.text().strip()
     
     def clear_search_input(self):
-        """Çå¿ÕËÑË÷¿ò¡£"""
+        """æ¸…ç©ºæœç´¢æ¡†ã€‚"""
         self.search_input.clear()
 
     def get_selected_item_id(self) -> Optional[str]:
-        """»ñÈ¡µ±Ç°Ñ¡ÖĞĞĞµÄÎïÆ· ID¡£"""
+        """è·å–å½“å‰é€‰ä¸­è¡Œçš„ç‰©å“ IDã€‚"""
         selected_rows = self.table_widget.selectionModel().selectedRows()
         if not selected_rows:
             return None
         
-        selected_row_index = selected_rows[0].row() # ÎÒÃÇÊÇµ¥Ñ¡
+        selected_row_index = selected_rows[0].row() # æˆ‘ä»¬æ˜¯å•é€‰
         if 0 <= selected_row_index < len(self._table_item_ids):
             return self._table_item_ids[selected_row_index]
         return None
 
     def get_selected_item_name(self) -> Optional[str]:
-        """»ñÈ¡µ±Ç°Ñ¡ÖĞĞĞµÄÎïÆ·Ãû³Æ (ÓÃÓÚÉ¾³ıÈ·ÈÏ¿ò)¡£"""
+        """è·å–å½“å‰é€‰ä¸­è¡Œçš„ç‰©å“åç§° (ç”¨äºåˆ é™¤ç¡®è®¤æ¡†)ã€‚"""
         selected_rows = self.table_widget.selectionModel().selectedRows()
         if not selected_rows:
             return None

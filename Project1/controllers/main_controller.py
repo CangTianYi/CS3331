@@ -1,7 +1,7 @@
 # controllers/main_controller.py
-# ÇĞ»»µ½ PyQt5: from PyQt5.QtWidgets import QMessageBox
+# åˆ‡æ¢åˆ° PyQt5: from PyQt5.QtWidgets import QMessageBox
 from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtCore import QObject # Controller ¿ÉÒÔÊÇ QObject 
+from PyQt6.QtCore import QObject # Controller å¯ä»¥æ˜¯ QObject 
 
 from model.data_manager import CsvDataManager
 from views.main_window import MainWindow
@@ -9,107 +9,107 @@ from views.add_item_dialog import AddItemDialog
 
 class MainController(QObject):
     """
-    PRD 4.3: Controller (¿ØÖÆ²ã)
-    Á¬½Ó View (ÊÓÍ¼) ºÍ Model (Êı¾İ)¡£
-    ´¦Àí°´Å¥µã»÷ÊÂ¼ş£¬µ÷ÓÃ CsvDataManager µÄ·½·¨£¬²¢¸üĞÂ View¡£
+    PRD 4.3: Controller (æ§åˆ¶å±‚)
+    è¿æ¥ View (è§†å›¾) å’Œ Model (æ•°æ®)ã€‚
+    å¤„ç†æŒ‰é’®ç‚¹å‡»äº‹ä»¶ï¼Œè°ƒç”¨ CsvDataManager çš„æ–¹æ³•ï¼Œå¹¶æ›´æ–° Viewã€‚
     """
     def __init__(self):
         super().__init__()
         
-        # PRD 4.3: ÊµÀı»¯ M ºÍ V
+        # PRD 4.3: å®ä¾‹åŒ– M å’Œ V
         self.model = CsvDataManager()
         self.view = MainWindow()
 
-        # --- ºËĞÄ£ºÁ¬½Ó View µÄĞÅºÅ(signals) µ½ Controller µÄ²Û(slots) ---
+        # --- æ ¸å¿ƒï¼šè¿æ¥ View çš„ä¿¡å·(signals) åˆ° Controller çš„æ§½(slots) ---
         self.view.add_item_requested.connect(self.show_add_item_dialog)
         self.view.delete_item_requested.connect(self.handle_delete_item)
         self.view.search_requested.connect(self.handle_search)
         self.view.clear_search_requested.connect(self.handle_clear_search)
 
-        # ³õÊ¼¼ÓÔØÊı¾İ
+        # åˆå§‹åŠ è½½æ•°æ®
         self.refresh_table_view()
 
     def run(self):
-        """Æô¶¯Ó¦ÓÃ£¬ÏÔÊ¾Ö÷´°¿Ú¡£"""
+        """å¯åŠ¨åº”ç”¨ï¼Œæ˜¾ç¤ºä¸»çª—å£ã€‚"""
         self.view.show()
 
     def refresh_table_view(self):
-        """´ÓÄ£ĞÍ¼ÓÔØËùÓĞÊı¾İ²¢¸üĞÂÊÓÍ¼¡£"""
+        """ä»æ¨¡å‹åŠ è½½æ‰€æœ‰æ•°æ®å¹¶æ›´æ–°è§†å›¾ã€‚"""
         all_items = self.model.get_all_items()
         self.view.update_table(all_items)
 
-    # --- ²Ûº¯Êı (Slots) ---
+    # --- æ§½å‡½æ•° (Slots) ---
 
     def show_add_item_dialog(self):
         """
-        ´¦Àí FR-002: Ìí¼ÓÎïÆ·
+        å¤„ç† FR-002: æ·»åŠ ç‰©å“
         """
-        # ´´½¨²¢ÏÔÊ¾¶Ô»°¿ò
+        # åˆ›å»ºå¹¶æ˜¾ç¤ºå¯¹è¯æ¡†
         dialog = AddItemDialog(self.view)
         
-        # .exec() »á×èÈû£¬Ö±µ½¶Ô»°¿ò¹Ø±Õ
-        if dialog.exec(): # QDialog.DialogCode.Accepted (ÓÃ»§µã»÷ÁË"±£´æ"ÇÒĞ£ÑéÍ¨¹ı)
+        # .exec() ä¼šé˜»å¡ï¼Œç›´åˆ°å¯¹è¯æ¡†å…³é—­
+        if dialog.exec(): # QDialog.DialogCode.Accepted (ç”¨æˆ·ç‚¹å‡»äº†"ä¿å­˜"ä¸”æ ¡éªŒé€šè¿‡)
             data = dialog.get_data()
             
-            # 1. µ÷ÓÃ Model Ìí¼ÓÊı¾İ
+            # 1. è°ƒç”¨ Model æ·»åŠ æ•°æ®
             self.model.add_item(
                 name=data["name"],
                 description=data["description"],
                 contact_info=data["contact"]
             )
             
-            # 2. PRD 4.2.2: Á¢¼´½«ÄÚ´æÁĞ±íĞ´»Ø CSV
+            # 2. PRD 4.2.2: ç«‹å³å°†å†…å­˜åˆ—è¡¨å†™å› CSV
             self.model.save_data()
             
-            # 3. FR-001: Ë¢ĞÂÖ÷½çÃæµÄÎïÆ·ÁĞ±í
+            # 3. FR-001: åˆ·æ–°ä¸»ç•Œé¢çš„ç‰©å“åˆ—è¡¨
             self.refresh_table_view()
 
     def handle_delete_item(self, item_id: str):
         """
-        ´¦Àí FR-003: É¾³ıÎïÆ·
+        å¤„ç† FR-003: åˆ é™¤ç‰©å“
         """
-        item_name = self.view.get_selected_item_name() or "¸ÃÎïÆ·"
+        item_name = self.view.get_selected_item_name() or "è¯¥ç‰©å“"
 
-        # PRD 3.3: °²È«È·ÈÏ
+        # PRD 3.3: å®‰å…¨ç¡®è®¤
         reply = QMessageBox.warning(
             self.view,
-            "È·ÈÏÉ¾³ı", # ±êÌâ
-            f"ÄúÈ·¶¨ÒªÉ¾³ı¡¸{item_name}¡¹Âğ£¿\n´Ë²Ù×÷²»¿É³·Ïú¡£", # ÄÚÈİ
+            "ç¡®è®¤åˆ é™¤", # æ ‡é¢˜
+            f"æ‚¨ç¡®å®šè¦åˆ é™¤ã€Œ{item_name}ã€å—ï¼Ÿ\næ­¤æ“ä½œä¸å¯æ’¤é”€ã€‚", # å†…å®¹
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No # Ä¬ÈÏ½¹µãÔÚ "No"
+            QMessageBox.StandardButton.No # é»˜è®¤ç„¦ç‚¹åœ¨ "No"
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            # 1. µ÷ÓÃ Model É¾³ı
+            # 1. è°ƒç”¨ Model åˆ é™¤
             deleted = self.model.delete_item(item_id)
             
             if deleted:
-                # 2. PRD 4.2.2: Á¢¼´Ğ´»Ø
+                # 2. PRD 4.2.2: ç«‹å³å†™å›
                 self.model.save_data()
-                # 3. FR-001: Ë¢ĞÂÁĞ±í
+                # 3. FR-001: åˆ·æ–°åˆ—è¡¨
                 self.refresh_table_view()
             else:
-                # ÀíÂÛÉÏ²»Ó¦¸Ã·¢Éú£¬ÒòÎª ID À´×Ô UI
-                QMessageBox.critical(self.view, "´íÎó", "É¾³ıÊ§°Ü£ºÎ´ÔÚÊı¾İÖĞÕÒµ½¸ÃÎïÆ·¡£")
+                # ç†è®ºä¸Šä¸åº”è¯¥å‘ç”Ÿï¼Œå› ä¸º ID æ¥è‡ª UI
+                QMessageBox.critical(self.view, "é”™è¯¯", "åˆ é™¤å¤±è´¥ï¼šæœªåœ¨æ•°æ®ä¸­æ‰¾åˆ°è¯¥ç‰©å“ã€‚")
 
     def handle_search(self, keyword: str):
         """
-        ´¦Àí FR-004: ²éÕÒÎïÆ·
+        å¤„ç† FR-004: æŸ¥æ‰¾ç‰©å“
         """
         if not keyword:
             self.refresh_table_view()
             return
         
-        # 1. µ÷ÓÃ Model ÔÚÄÚ´æÖĞËÑË÷
+        # 1. è°ƒç”¨ Model åœ¨å†…å­˜ä¸­æœç´¢
         results = self.model.search_items(keyword)
         
-        # 2. FR-001: ÁĞ±íÓ¦Ë¢ĞÂ£¬½öÏÔÊ¾½á¹û
+        # 2. FR-001: åˆ—è¡¨åº”åˆ·æ–°ï¼Œä»…æ˜¾ç¤ºç»“æœ
         self.view.update_table(results)
 
     def handle_clear_search(self):
         """
-        ´¦Àí FR-004: Çå³ı/ÖØÖÃ
+        å¤„ç† FR-004: æ¸…é™¤/é‡ç½®
         """
-        # ×¢Òâ£ºView ÒÑ¾­×Ô¼ºÇå³ıÁËÊäÈë¿ò (ÔÚ on_clear_search_clicked ÖĞ)
-        # ÎÒÃÇÖ»ĞèÒªË¢ĞÂÁĞ±íÒÔÏÔÊ¾ËùÓĞÎïÆ·
+        # æ³¨æ„ï¼šView å·²ç»è‡ªå·±æ¸…é™¤äº†è¾“å…¥æ¡† (åœ¨ on_clear_search_clicked ä¸­)
+        # æˆ‘ä»¬åªéœ€è¦åˆ·æ–°åˆ—è¡¨ä»¥æ˜¾ç¤ºæ‰€æœ‰ç‰©å“
         self.refresh_table_view()
