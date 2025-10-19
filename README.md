@@ -1,12 +1,10 @@
 # 校园咸鱼 V1.0 
 
-# ![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
 ![Framework](https://img.shields.io/badge/Framework-PyQt6-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)
 
 “校园咸鱼”是一个轻量级的桌面应用程序，旨在帮助大学生快速发布和查找校内闲置物品。
-
-本项目是基于 [V1.0 产品需求文档 (PRD)](#) 的一份完整 Python 实现，严格遵循 PRD 中定义的功能需求、技术栈和 MVC 架构。
 
 ## V1.0 核心功能 (PRD 2.0)
 
