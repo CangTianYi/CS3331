@@ -25,7 +25,7 @@
 ## 技术栈与架构 (PRD 4.0)
 
 * **语言**: Python 3.x
-* **GUI 框架**: PyQt6 (可轻松兼容 PyQt5)
+* **GUI 框架**: PyQt6 
 * **数据存储**: 本地 `items.csv` 文件 (V1.0 方案，使用 `uuid` 作为唯一ID)
 * **核心架构**: MVC (Model-View-Controller) 模式
 
