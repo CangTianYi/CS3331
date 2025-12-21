@@ -1,0 +1,96 @@
+/* Global Styles */
+QWidget {
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    color: #333333;
+    background-color: #F5F7FA;
+}
+
+/* Scroll Area */
+QScrollArea {
+    border: none;
+    background-color: transparent;
+}
+QWidget#ScrollContents {
+    background-color: transparent;
+}
+
+/* Item Card Styles */
+QFrame#ItemCard {
+    background-color: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    border-radius: 12px;
+}
+QFrame#ItemCard[selected="true"] {
+    border: 2px solid #3498DB;
+    background-color: #F0F8FF;
+}
+QFrame#ItemCard:hover {
+    border: 1px solid #3498DB;
+}
+
+QLabel#CardTitle {
+    font-size: 16px;
+    font-weight: bold;
+    color: #2C3E50;
+}
+
+QLabel#CardContact {
+    font-size: 12px;
+    color: #7F8C8D;
+}
+
+QFrame#CardLine {
+    color: #F0F0F0;
+}
+
+QLabel#CardBody {
+    font-size: 13px;
+    color: #555555;
+}
+
+/* Input Fields */
+QLineEdit {
+    background-color: #FFFFFF;
+    border: 1px solid #BDC3C7;
+    border-radius: 6px;
+    padding: 8px;
+    selection-background-color: #3498DB;
+}
+QLineEdit:focus {
+    border: 1px solid #3498DB;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #FFFFFF;
+    border: 1px solid #BDC3C7;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: bold;
+    color: #2C3E50;
+}
+QPushButton:hover {
+    background-color: #ECF0F1;
+}
+QPushButton:pressed {
+    background-color: #BDC3C7;
+}
+
+QPushButton#PrimaryButton {
+    background-color: #3498DB;
+    color: #FFFFFF;
+    border: none;
+}
+QPushButton#PrimaryButton:hover {
+    background-color: #2980B9;
+}
+QPushButton#PrimaryButton:pressed {
+    background-color: #2471A3;
+}
+
+QPushButton:disabled {
+    background-color: #F0F0F0;
+    color: #BDC3C7;
+    border: 1px solid #E0E0E0;
+}

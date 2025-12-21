@@ -36,7 +36,7 @@ class MainController(QObject):
     def refresh_table_view(self):
         """从模型加载所有数据并更新视图。"""
         all_items = self.model.get_all_items()
-        self.view.update_table(all_items)
+        self.view.update_view(all_items)
 
     # --- 槽函数 (Slots) ---
 
@@ -68,7 +68,7 @@ class MainController(QObject):
         """
         处理 FR-003: 删除物品
         """
-        item_name = self.view.get_selected_item_name() or "该物品"
+        item_name = self.view.get_selected_item_name() or "Selected Item"
 
         # PRD 3.3: 安全确认
         reply = QMessageBox.warning(
@@ -104,7 +104,7 @@ class MainController(QObject):
         results = self.model.search_items(keyword)
         
         # 2. FR-001: 列表应刷新，仅显示结果
-        self.view.update_table(results)
+        self.view.update_view(results)
 
     def handle_clear_search(self):
         """

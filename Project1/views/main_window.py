@@ -1,199 +1,183 @@
 # views/main_window.py
-# 切换到 PyQt5: from PyQt5.QtWidgets import ...; from PyQt5.QtCore import pyqtSignal
 from typing import List, Dict, Optional
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit,
-    QTableWidget, QAbstractItemView, QHeaderView, QLabel, QTableWidgetItem
+    QScrollArea, QLabel, QFrame
 )
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import pyqtSignal, Qt, QFile, QTextStream
+
+from views.components.flow_layout import FlowLayout
+from views.components.item_card import ItemCard
 
 class MainWindow(QWidget):
     """
     PRD 3.1: 主窗口 (View)
-    只负责 UI 布局和显示，通过 signals (信号) 与 Controller 通信。
+    Updated: Uses Card Grid Layout instead of Table.
     """
     
-    # --- 为 Controller 定义的信号 ---
-    # 当用户点击 "添加" 按钮时发出
+    # --- Signals for Controller ---
     add_item_requested = pyqtSignal()
-    # 当用户确认 "删除" 按钮时发出，携带要删除的 item_id
     delete_item_requested = pyqtSignal(str) 
-    # 当用户点击 "搜索" 按钮时发出，携带关键词
     search_requested = pyqtSignal(str)
-    # 当用户点击 "清除" 按钮时发出
     clear_search_requested = pyqtSignal()
     
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("校园咸鱼 V1.0")
-        self.setGeometry(200, 200, 700, 500) # x, y, width, height
+        self.setWindowTitle("校园咸鱼 V1.0 - Marketplace")
+        self.setGeometry(200, 200, 900, 700) # Increased size
         
-        # 内部映射，用于根据表格行号查找真实的 data 'id'
-        # [ { 'id': 'uuid1', 'name': '...' }, ... ]
-        self._table_item_ids: List[str] = []
+        # Load Styles
+        self._load_styles()
+
+        self._selected_item_id: Optional[str] = None
+        self._cards: Dict[str, ItemCard] = {} # Map item_id -> ItemCard widget
 
         self.setup_ui()
 
-    def setup_ui(self):
-        # PRD 3.1: 垂直流式布局
-        main_layout = QVBoxLayout(self)
+    def _load_styles(self):
+        file = QFile("assets/styles.qss")
+        if file.open(QFile.OpenModeFlag.ReadOnly | QFile.OpenModeFlag.Text):
+            stream = QTextStream(file)
+            self.setStyleSheet(stream.readAll())
 
-        # --- PRD 3.1: 顶部区域 (工具栏/搜索) ---
-        search_layout = QHBoxLayout()
-        search_layout.addWidget(QLabel("搜索："))
+    def setup_ui(self):
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
+
+        # --- Top Bar: Title & Search ---
+        top_bar = QHBoxLayout()
         
-        # PRD FR-004: 搜索框
+        title_label = QLabel("Campus Xianyu")
+        title_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #2C3E50;")
+        top_bar.addWidget(title_label)
+        
+        top_bar.addStretch()
+
+        search_layout = QHBoxLayout()
+        search_layout.setSpacing(10)
+
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("搜索物品名称或描述...")
+        self.search_input.setPlaceholderText("Search items...")
+        self.search_input.setFixedWidth(250)
         search_layout.addWidget(self.search_input)
         
-        # PRD FR-004: 搜索按钮
-        self.search_button = QPushButton("搜索")
+        self.search_button = QPushButton("Search")
+        self.search_button.setObjectName("PrimaryButton")
+        self.search_button.setCursor(Qt.CursorShape.PointingHandCursor)
         search_layout.addWidget(self.search_button)
         
-        # PRD FR-004: 清除按钮
-        self.clear_search_button = QPushButton("清除搜索")
+        self.clear_search_button = QPushButton("Clear")
+        self.clear_search_button.setCursor(Qt.CursorShape.PointingHandCursor)
         search_layout.addWidget(self.clear_search_button)
         
-        main_layout.addLayout(search_layout)
+        top_bar.addLayout(search_layout)
+        main_layout.addLayout(top_bar)
 
-        # --- PRD 3.1: 中部区域 (内容区) ---
-        # PRD 3.1: 使用 QTableWidget
-        self.table_widget = QTableWidget()
-        # PRD 3.1: 表格列
-        self.table_widget.setColumnCount(3)
-        self.table_widget.setHorizontalHeaderLabels(["物品名称", "物品描述", "联系人信息"])
+        # --- Content Area: Scrollable Card Grid ---
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
         
-        # --- UI/UX 优化 (符合 PRD 简洁风格) ---
-        # PRD FR-003: 必须能够选中一个物品 (设置为选中整行)
-        self.table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        # 仅允许单选
-        self.table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        # 禁止编辑
-        self.table_widget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        # 隐藏垂直表头 (行号)
-        self.table_widget.verticalHeader().setVisible(False)
-        # 允许排序
-        self.table_widget.setSortingEnabled(True)
+        self.scroll_content = QWidget()
+        self.scroll_content.setObjectName("ScrollContents")
+        # Use FlowLayout for responsive grid
+        self.flow_layout = FlowLayout(self.scroll_content, margin=10, h_spacing=20, v_spacing=20) 
         
-        # PRD 3.1: 列宽设置
-        header = self.table_widget.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive) # 名称可拖动
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch) # 描述自适应
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive) # 联系人可拖动
-        
-        # PRD FR-001: 占据主要空间
-        main_layout.addWidget(self.table_widget)
+        scroll_area.setWidget(self.scroll_content)
+        main_layout.addWidget(scroll_area)
 
-        # --- PRD 3.1: 底部区域 (操作栏) ---
+        # --- Bottom Bar: Actions ---
         action_layout = QHBoxLayout()
         
-        # PRD FR-002: 添加按钮
-        self.add_button = QPushButton("添加新物品...")
+        self.add_button = QPushButton("+ Sell New Item")
+        self.add_button.setObjectName("PrimaryButton")
+        self.add_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.add_button.setMinimumHeight(40)
         action_layout.addWidget(self.add_button)
         
-        # PRD FR-003: 删除按钮
-        self.delete_button = QPushButton("删除选中物品")
-        # PRD 3.1: 默认禁用
+        action_layout.addStretch()
+        
+        self.delete_button = QPushButton("Delete Selected")
         self.delete_button.setEnabled(False) 
+        self.delete_button.setMinimumHeight(40)
+        self.delete_button.setStyleSheet("color: #E74C3C; border-color: #E74C3C;")
         action_layout.addWidget(self.delete_button)
         
-        action_layout.addStretch() # 将按钮推向左侧
         main_layout.addLayout(action_layout)
 
-        # --- 内部信号与槽的连接 ---
-        # 当表格选择变化时，更新 "删除" 按钮的状态
-        self.table_widget.selectionModel().selectionChanged.connect(self.on_selection_changed)
-        
-        # --- 连接 View 控件到 "pyqtSignal" ---
-        # (Controller 将会监听这些 pyqtSignal)
+        # --- Connections ---
         self.add_button.clicked.connect(self.add_item_requested)
         self.search_button.clicked.connect(self.on_search_clicked)
-        # PRD FR-004: 支持回车搜索
         self.search_input.returnPressed.connect(self.on_search_clicked)
         self.clear_search_button.clicked.connect(self.on_clear_search_clicked)
         self.delete_button.clicked.connect(self.on_delete_clicked)
 
-    # --- 内部槽函数 (Private Slots) ---
+    # --- Private Slots ---
 
-    def on_selection_changed(self):
-        """PRD 3.1: 选中列表项后激活 (删除按钮)。"""
-        # 检查是否有任何项被选中
-        is_item_selected = bool(self.table_widget.selectionModel().selectedRows())
-        self.delete_button.setEnabled(is_item_selected)
+    def on_card_clicked(self, item_id: str):
+        """Handle card selection logic."""
+        # Deselect previous
+        if self._selected_item_id and self._selected_item_id in self._cards:
+            self._cards[self._selected_item_id].set_selected(False)
+        
+        # Select new
+        self._selected_item_id = item_id
+        if item_id in self._cards:
+            self._cards[item_id].set_selected(True)
+            
+        self.delete_button.setEnabled(True)
 
     def on_search_clicked(self):
-        """当点击搜索或按回车时，发出 search_requested 信号。"""
         term = self.get_search_term()
         self.search_requested.emit(term)
         
     def on_clear_search_clicked(self):
-        """当点击清除时，清空输入框并发出 clear_search_requested 信号。"""
         self.clear_search_input()
         self.clear_search_requested.emit()
 
     def on_delete_clicked(self):
-        """当点击删除时，获取选中项的 ID，并发出 delete_item_requested 信号。"""
-        item_id = self.get_selected_item_id()
-        if item_id:
-            self.delete_item_requested.emit(item_id)
+        if self._selected_item_id:
+            self.delete_item_requested.emit(self._selected_item_id)
 
-    # --- 公共方法 (Public Methods for Controller) ---
+    # --- Public Methods for Controller ---
 
-    def update_table(self, items: List[Dict[str, str]]):
+    def update_view(self, items: List[Dict[str, str]]):
         """
-        FR-001: 物品列表展示。
-        由 Controller 调用，用传入的数据刷新表格。
+        Refresh the grid of cards.
         """
-        # 暂时禁用排序以提高插入性能
-        self.table_widget.setSortingEnabled(False)
+        # Clear existing layout items
+        while self.flow_layout.count():
+            item = self.flow_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
         
-        self.table_widget.setRowCount(0) # 清空表格
-        self._table_item_ids = [] # 清空 ID 映射
-        
+        self._cards.clear()
+        self._selected_item_id = None
+        self.delete_button.setEnabled(False)
+
         for item in items:
-            row_position = self.table_widget.rowCount()
-            self.table_widget.insertRow(row_position)
+            card = ItemCard(
+                item_id=item['id'],
+                name=item['name'],
+                description=item['description'],
+                contact=item['contact_info']
+            )
+            # Connect card click signal
+            card.clicked.connect(self.on_card_clicked)
             
-            # PRD 4.2.3: 存储 ID 用于删除 (但不显示)
-            self._table_item_ids.append(item['id'])
-            
-            # 填充表格 (PRD FR-001: 名称, 描述, 联系人)
-            self.table_widget.setItem(row_position, 0, QTableWidgetItem(item['name']))
-            self.table_widget.setItem(row_position, 1, QTableWidgetItem(item['description']))
-            self.table_widget.setItem(row_position, 2, QTableWidgetItem(item['contact_info']))
-
-        # 重新启用排序
-        self.table_widget.setSortingEnabled(True)
-        # 刷新后，选择被清除，确保删除按钮被禁用
-        self.on_selection_changed()
+            self.flow_layout.addWidget(card)
+            self._cards[item['id']] = card
 
     def get_search_term(self) -> str:
-        """获取搜索框中的文本。"""
         return self.search_input.text().strip()
     
     def clear_search_input(self):
-        """清空搜索框。"""
         self.search_input.clear()
 
-    def get_selected_item_id(self) -> Optional[str]:
-        """获取当前选中行的物品 ID。"""
-        selected_rows = self.table_widget.selectionModel().selectedRows()
-        if not selected_rows:
-            return None
-        
-        selected_row_index = selected_rows[0].row() # 我们是单选
-        if 0 <= selected_row_index < len(self._table_item_ids):
-            return self._table_item_ids[selected_row_index]
-        return None
-
     def get_selected_item_name(self) -> Optional[str]:
-        """获取当前选中行的物品名称 (用于删除确认框)。"""
-        selected_rows = self.table_widget.selectionModel().selectedRows()
-        if not selected_rows:
-            return None
-        
-        name_item = self.table_widget.item(selected_rows[0].row(), 0)
-        if name_item:
-            return name_item.text()
+        if self._selected_item_id and self._selected_item_id in self._cards:
+            # We can retrieve the name from the card label or by storing data map.
+            # Here we just read the card's name label for simplicity
+            return self._cards[self._selected_item_id].lbl_name.text()
         return None
