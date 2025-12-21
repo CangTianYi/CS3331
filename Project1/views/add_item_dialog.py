@@ -184,6 +184,10 @@ class AddItemDialog(QDialog):
         self.step2_layout.addLayout(nav)
 
     def get_data(self) -> dict:
+        # Safety check: ensure step 2 form was built
+        if not hasattr(self, 'name_input') or self._selected_type is None:
+            return {}
+        
         custom_values = {}
         for attr_name, widget in self._custom_inputs.items():
             if isinstance(widget, QDateEdit):

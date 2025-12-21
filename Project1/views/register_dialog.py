@@ -14,12 +14,13 @@ class RegisterDialog(QDialog):
     """Registration dialog with user details."""
     
     register_requested = pyqtSignal(str, str, str, str, str, str)
+    back_to_login = pyqtSignal()  # Signal to navigate back to login
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Register - Campus Xianyu")
-        self.setFixedSize(450, 500)
-        self.setModal(True)
+        self.setMinimumSize(450, 500)
+        # Note: Do NOT set modal when used in QStackedWidget
         self.setup_ui()
 
     def setup_ui(self):
@@ -91,7 +92,10 @@ class RegisterDialog(QDialog):
 
         # Connections
         self.register_btn.clicked.connect(self.on_register_clicked)
-        self.back_btn.clicked.connect(self.reject)
+        self.back_btn.clicked.connect(self.on_back_clicked)
+
+    def on_back_clicked(self):
+        self.back_to_login.emit()
 
     def on_register_clicked(self):
         self.register_requested.emit(
@@ -111,4 +115,13 @@ class RegisterDialog(QDialog):
             self, "Registration Successful", 
             "Your account has been submitted. Please wait for admin approval."
         )
-        self.accept()
+        self.clear_inputs()
+        self.back_to_login.emit()  # Navigate back to login after success
+
+    def clear_inputs(self):
+        self.username_input.clear()
+        self.password_input.clear()
+        self.confirm_input.clear()
+        self.email_input.clear()
+        self.phone_input.clear()
+        self.address_input.clear()

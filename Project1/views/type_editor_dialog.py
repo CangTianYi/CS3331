@@ -64,7 +64,7 @@ class TypeEditorDialog(QDialog):
 
         # Add Attribute Button
         add_attr_btn = QPushButton("+ Add Attribute")
-        add_attr_btn.clicked.connect(self.add_attribute_row)
+        add_attr_btn.clicked.connect(lambda: self.add_attribute_row())
         layout.addWidget(add_attr_btn)
 
         # Buttons
@@ -89,7 +89,7 @@ class TypeEditorDialog(QDialog):
         row = self.attr_table.rowCount()
         self.attr_table.insertRow(row)
 
-        name_input = QLineEdit(name)
+        name_input = QLineEdit(str(name) if name else "")
         name_input.setPlaceholderText("Attribute name")
         self.attr_table.setCellWidget(row, 0, name_input)
 
@@ -100,7 +100,8 @@ class TypeEditorDialog(QDialog):
 
         del_btn = QPushButton("Delete")
         del_btn.setStyleSheet("color: #E74C3C;")
-        del_btn.clicked.connect(lambda: self.remove_attribute_row(row))
+        # Fix: Lambda must accept the 'checked' argument from clicked signal
+        del_btn.clicked.connect(lambda checked: self.remove_attribute_row(row))
         self.attr_table.setCellWidget(row, 2, del_btn)
 
     def remove_attribute_row(self, row: int):
@@ -109,7 +110,11 @@ class TypeEditorDialog(QDialog):
         for i in range(self.attr_table.rowCount()):
             del_btn = self.attr_table.cellWidget(i, 2)
             if del_btn:
-                del_btn.clicked.disconnect()
+                try:
+                    del_btn.clicked.disconnect()
+                except TypeError:
+                    pass # Signal wasn't connected or other issue
+                # Fix: Reconnect properly
                 del_btn.clicked.connect(lambda checked, r=i: self.remove_attribute_row(r))
 
     def load_type_data(self):

@@ -60,6 +60,7 @@ class MainController(QObject):
         self.auth_controller.login_failed.connect(self.login_dialog.show_error)
         
         self.register_dialog.register_requested.connect(self.auth_controller.register)
+        self.register_dialog.back_to_login.connect(self.show_login)
         self.auth_controller.register_success.connect(self.register_dialog.show_success)
         self.auth_controller.register_failed.connect(self.register_dialog.show_error)
 
@@ -106,6 +107,9 @@ class MainController(QObject):
 
     def show_register(self):
         self.stack.setCurrentWidget(self.register_dialog)
+
+    def show_login(self):
+        self.stack.setCurrentWidget(self.login_dialog)
 
     def show_main_window(self):
         types = self.type_manager.get_all_types()

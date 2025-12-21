@@ -22,7 +22,7 @@ class LoginDialog(QDialog):
         self.setWindowTitle("Login - Campus Xianyu")
         # Removed fixed size to support responsiveness
         self.setMinimumSize(900, 600)
-        self.setModal(True)
+        # Note: Do NOT set modal when used in QStackedWidget
         self.setup_ui()
 
     def setup_ui(self):
@@ -41,7 +41,7 @@ class LoginDialog(QDialog):
         # Title
         title = QLabel("Campus Xianyu")
         title.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        title.setFont(QFont("Segoe UI", 48, QFont.Weight.Bold))
+        title.setFont(QFont("Segoe UI", 32, QFont.Weight.Bold))
         title.setStyleSheet("color: #2C3E50;")
         form_layout.addWidget(title)
 

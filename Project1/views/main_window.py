@@ -234,7 +234,11 @@ class MainWindow(QWidget):
                 description=description,
                 contact=f"{item.get('contact_phone', '')} | {item.get('location', '')}"
             )
-            card.clicked.disconnect()
+            # Disconnect existing clicked connection if any
+            try:
+                card.clicked.disconnect()
+            except TypeError:
+                pass  # No connections to disconnect
             card.item_id_int = item['id']
             card.clicked.connect(lambda id_str, iid=item['id']: self.on_card_clicked(iid))
             
