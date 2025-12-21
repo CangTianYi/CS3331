@@ -62,12 +62,19 @@ class Database:
                 location TEXT,
                 contact_phone TEXT,
                 contact_email TEXT,
+                image_path TEXT,
                 custom_values TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (type_id) REFERENCES item_types(id) ON DELETE CASCADE,
                 FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
             )
         """)
+        
+        # Migration: Add image_path column if it doesn't exist
+        cursor.execute("PRAGMA table_info(items)")
+        columns = [column[1] for column in cursor.fetchall()]
+        if 'image_path' not in columns:
+            cursor.execute("ALTER TABLE items ADD COLUMN image_path TEXT")
         
         # Check if admin user exists
         cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")

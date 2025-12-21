@@ -18,6 +18,7 @@ from views.login_dialog import LoginDialog
 from views.register_dialog import RegisterDialog
 from views.admin_panel import AdminPanel
 from views.add_item_dialog import AddItemDialog
+from views.item_detail_dialog import ItemDetailDialog
 
 class MainController(QObject):
     """Main application controller."""
@@ -71,6 +72,7 @@ class MainController(QObject):
         self.main_window.search_requested.connect(self.handle_search)
         self.main_window.add_item_requested.connect(self.show_add_item_dialog)
         self.main_window.delete_item_requested.connect(self.handle_delete_item)
+        self.main_window.item_detail_requested.connect(self.show_item_detail)
 
     def _connect_admin_signals(self):
         self.admin_panel.back_requested.connect(self.show_main_window)
@@ -127,6 +129,13 @@ class MainController(QObject):
             items = self.item_manager.get_items_by_type(type_id)
         self.main_window.update_view(items)
 
+    def show_item_detail(self, item_id: int):
+        """Show item detail dialog."""
+        item_data = self.main_window.get_item_data(item_id)
+        if item_data:
+            dialog = ItemDetailDialog(item_data, self.main_window)
+            dialog.exec()
+
     def show_add_item_dialog(self):
         types = self.type_manager.get_all_types()
         if not types:
@@ -149,7 +158,8 @@ class MainController(QObject):
                 location=data['location'],
                 contact_phone=data['contact_phone'],
                 contact_email=data['contact_email'],
-                custom_values=data['custom_values']
+                custom_values=data['custom_values'],
+                image_path=data.get('image_path')
             )
             
             current_type_id = self.main_window.get_selected_type_id()

@@ -11,16 +11,16 @@ class ItemManager:
 
     def add_item(self, type_id: int, owner_id: int, name: str, description: str,
                  location: str, contact_phone: str, contact_email: str,
-                 custom_values: dict) -> dict:
+                 custom_values: dict, image_path: str = None) -> dict:
         """Add a new item."""
         item_id = db.execute_query(
             """
             INSERT INTO items (type_id, owner_id, name, description, location, 
-                               contact_phone, contact_email, custom_values)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                               contact_phone, contact_email, image_path, custom_values)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (type_id, owner_id, name, description, location, 
-             contact_phone, contact_email, json.dumps(custom_values))
+             contact_phone, contact_email, image_path, json.dumps(custom_values))
         )
         return {'id': item_id, 'name': name}
 

@@ -3,12 +3,16 @@
 """
 Add Item Dialog: Two-step form with type selection and dynamic fields.
 """
+import os
+import shutil
+import uuid
 from PyQt6.QtWidgets import (
     QDialog, QLineEdit, QTextEdit, QPushButton, QFormLayout, 
     QVBoxLayout, QHBoxLayout, QComboBox, QLabel, QMessageBox,
-    QStackedWidget, QWidget, QDateEdit
+    QStackedWidget, QWidget, QDateEdit, QFileDialog
 )
 from PyQt6.QtCore import Qt, QDate
+from PyQt6.QtGui import QPixmap
 
 class AddItemDialog(QDialog):
     """Dialog for adding a new item."""
@@ -17,12 +21,20 @@ class AddItemDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Post New Item")
         self.setModal(True)
-        self.setMinimumWidth(450)
-        self.setMinimumHeight(550)
+        self.setMinimumWidth(500)
+        self.setMinimumHeight(600)
         
         self._item_types = item_types or []
         self._selected_type = None
         self._custom_inputs = {}
+        self._selected_image_path = None  # Store selected image path
+        
+        # Create uploads directory if it doesn't exist
+        self._uploads_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+            "uploads"
+        )
+        os.makedirs(self._uploads_dir, exist_ok=True)
         
         self.setup_ui()
 
@@ -97,6 +109,7 @@ class AddItemDialog(QDialog):
                 child.widget().deleteLater()
         
         self._custom_inputs.clear()
+        self._selected_image_path = None
         
         form = QFormLayout()
         form.setSpacing(12)
@@ -104,6 +117,45 @@ class AddItemDialog(QDialog):
         type_label = QLabel(f"Type: {self._selected_type['name']}")
         type_label.setStyleSheet("font-weight: bold; color: #3498DB; margin-bottom: 10px;")
         self.step2_layout.addWidget(type_label)
+
+        # Image Upload Section
+        image_section = QVBoxLayout()
+        image_label = QLabel("Item Image")
+        image_label.setStyleSheet("font-weight: bold; font-size: 13px;")
+        image_section.addWidget(image_label)
+        
+        image_row = QHBoxLayout()
+        
+        self.image_preview = QLabel("No image selected")
+        self.image_preview.setFixedSize(120, 90)
+        self.image_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_preview.setStyleSheet("""
+            background-color: #ECF0F1; 
+            border: 1px dashed #BDC3C7;
+            border-radius: 5px;
+            color: #7F8C8D;
+            font-size: 11px;
+        """)
+        image_row.addWidget(self.image_preview)
+        
+        image_btn_layout = QVBoxLayout()
+        self.select_image_btn = QPushButton("Select Image")
+        self.select_image_btn.setMinimumHeight(35)
+        self.select_image_btn.clicked.connect(self.select_image)
+        image_btn_layout.addWidget(self.select_image_btn)
+        
+        self.clear_image_btn = QPushButton("Clear")
+        self.clear_image_btn.setMinimumHeight(30)
+        self.clear_image_btn.clicked.connect(self.clear_image)
+        self.clear_image_btn.setEnabled(False)
+        image_btn_layout.addWidget(self.clear_image_btn)
+        image_btn_layout.addStretch()
+        
+        image_row.addLayout(image_btn_layout)
+        image_row.addStretch()
+        
+        image_section.addLayout(image_row)
+        self.step2_layout.addLayout(image_section)
 
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText("Item name")
@@ -183,6 +235,50 @@ class AddItemDialog(QDialog):
         
         self.step2_layout.addLayout(nav)
 
+    def select_image(self):
+        """Open file dialog to select an image."""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, 
+            "Select Image", 
+            "", 
+            "Images (*.png *.jpg *.jpeg *.gif *.bmp)"
+        )
+        if file_path:
+            self._selected_image_path = file_path
+            # Show preview
+            pixmap = QPixmap(file_path)
+            scaled = pixmap.scaled(
+                self.image_preview.size(), 
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
+            self.image_preview.setPixmap(scaled)
+            self.clear_image_btn.setEnabled(True)
+
+    def clear_image(self):
+        """Clear selected image."""
+        self._selected_image_path = None
+        self.image_preview.setText("No image selected")
+        self.image_preview.setPixmap(QPixmap())
+        self.clear_image_btn.setEnabled(False)
+
+    def copy_image_to_uploads(self) -> str:
+        """Copy selected image to uploads folder and return new path."""
+        if not self._selected_image_path:
+            return None
+        
+        # Generate unique filename
+        ext = os.path.splitext(self._selected_image_path)[1]
+        new_filename = f"{uuid.uuid4().hex}{ext}"
+        new_path = os.path.join(self._uploads_dir, new_filename)
+        
+        try:
+            shutil.copy2(self._selected_image_path, new_path)
+            return new_path
+        except Exception as e:
+            print(f"Error copying image: {e}")
+            return None
+
     def get_data(self) -> dict:
         # Safety check: ensure step 2 form was built
         if not hasattr(self, 'name_input') or self._selected_type is None:
@@ -195,6 +291,9 @@ class AddItemDialog(QDialog):
             else:
                 custom_values[attr_name] = widget.text().strip()
         
+        # Copy image to uploads if selected
+        image_path = self.copy_image_to_uploads()
+        
         return {
             "type_id": self._selected_type['id'],
             "name": self.name_input.text().strip(),
@@ -202,18 +301,19 @@ class AddItemDialog(QDialog):
             "location": self.location_input.text().strip(),
             "contact_phone": self.phone_input.text().strip(),
             "contact_email": self.email_input.text().strip(),
+            "image_path": image_path,
             "custom_values": custom_values
         }
 
     def validate_input(self) -> bool:
         data = self.get_data()
-        if not data["name"]:
+        if not data.get("name"):
             QMessageBox.warning(self, "Notice", "Please enter item name")
             return False
-        if not data["location"]:
+        if not data.get("location"):
             QMessageBox.warning(self, "Notice", "Please enter location")
             return False
-        if not data["contact_phone"]:
+        if not data.get("contact_phone"):
             QMessageBox.warning(self, "Notice", "Please enter phone number")
             return False
         return True

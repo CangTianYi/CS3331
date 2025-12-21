@@ -23,6 +23,7 @@ class MainWindow(QWidget):
     category_changed = pyqtSignal(int)
     logout_requested = pyqtSignal()
     admin_panel_requested = pyqtSignal()
+    item_detail_requested = pyqtSignal(int)  # item_id
     
     def __init__(self):
         super().__init__()
@@ -35,6 +36,7 @@ class MainWindow(QWidget):
         self._cards: Dict[int, ItemCard] = {}
         self._current_user = None
         self._item_types = []
+        self._items_data: Dict[int, Dict] = {}  # Store item data for detail view
 
         self.setup_ui()
 
@@ -192,6 +194,9 @@ class MainWindow(QWidget):
             self._cards[item_id].set_selected(True)
             
         self.delete_button.setEnabled(True)
+        
+        # Emit signal to show item detail
+        self.item_detail_requested.emit(item_id)
 
     def on_search_clicked(self):
         type_id = self.get_selected_type_id()
@@ -215,10 +220,14 @@ class MainWindow(QWidget):
                 widget.deleteLater()
         
         self._cards.clear()
+        self._items_data.clear()
         self._selected_item_id = None
         self.delete_button.setEnabled(False)
 
         for item in items:
+            # Store item data for detail view
+            self._items_data[item['id']] = item
+            
             custom_text = ""
             custom_values = item.get('custom_values', {})
             if custom_values:
@@ -232,7 +241,8 @@ class MainWindow(QWidget):
                 item_id=str(item['id']),
                 name=item['name'],
                 description=description,
-                contact=f"{item.get('contact_phone', '')} | {item.get('location', '')}"
+                contact=f"{item.get('contact_phone', '')} | {item.get('location', '')}",
+                image_path=item.get('image_path')
             )
             # Disconnect existing clicked connection if any
             try:
@@ -249,3 +259,8 @@ class MainWindow(QWidget):
         if self._selected_item_id and self._selected_item_id in self._cards:
             return self._cards[self._selected_item_id].lbl_name.text()
         return None
+
+    def get_item_data(self, item_id: int) -> Optional[Dict]:
+        """Get item data by ID for detail view."""
+        return self._items_data.get(item_id)
+
