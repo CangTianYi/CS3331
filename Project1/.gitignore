@@ -1,0 +1,15 @@
+# Ignore database config with credentials
+config/db_config.json
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# CSV data (now using MySQL)
+items.csv

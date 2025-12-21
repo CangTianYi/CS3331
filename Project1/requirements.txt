@@ -1,2 +1,4 @@
 # 推荐使用 PyQt6，如需使用 PyQt5，请将下面改为 PyQt5
 PyQt6
+mysql-connector-python
+bcrypt

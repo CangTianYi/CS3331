@@ -1,80 +1,219 @@
+# -*- coding: utf-8 -*-
 # views/add_item_dialog.py
-# 切换到 PyQt5: from PyQt5.QtWidgets import ...
+"""
+Add Item Dialog: Two-step form with type selection and dynamic fields.
+"""
 from PyQt6.QtWidgets import (
     QDialog, QLineEdit, QTextEdit, QPushButton, QFormLayout, 
-    QVBoxLayout, QDialogButtonBox, QMessageBox
+    QVBoxLayout, QHBoxLayout, QComboBox, QLabel, QMessageBox,
+    QStackedWidget, QWidget, QDateEdit
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QDate
 
 class AddItemDialog(QDialog):
-    """
-    PRD 3.2: 添加物品对话框 (View)
-    这是一个模式对话框 (QDialog)，只负责 UI 布局和获取用户输入。
-    """
-    def __init__(self, parent=None):
+    """Dialog for adding a new item."""
+    
+    def __init__(self, parent=None, item_types: list = None):
         super().__init__(parent)
-        self.setWindowTitle("添加新物品")
-        # PRD FR-002: 模式对话框
+        self.setWindowTitle("Post New Item")
         self.setModal(True)
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
+        self.setMinimumHeight(550)
+        
+        self._item_types = item_types or []
+        self._selected_type = None
+        self._custom_inputs = {}
         
         self.setup_ui()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setSpacing(15)
+
+        title = QLabel("Post New Item")
+        title.setStyleSheet("font-size: 20px; font-weight: bold; color: #2C3E50;")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
+
+        self.stack = QStackedWidget()
         
-        # PRD 3.2: 表单布局 (QFormLayout)
-        form_layout = QFormLayout()
-
-        # PRD 3.2: 控件
-        self.name_edit = QLineEdit()
-        self.desc_edit = QTextEdit()
-        self.contact_edit = QLineEdit()
+        self.step1 = QWidget()
+        self.setup_step1()
+        self.stack.addWidget(self.step1)
         
-        # PRD FR-002: 提示必填项
-        form_layout.addRow("物品名称 (*):", self.name_edit)
-        form_layout.addRow("物品描述:", self.desc_edit)
-        form_layout.addRow("联系信息 (*):", self.contact_edit)
+        self.step2 = QWidget()
+        self.step2_layout = QVBoxLayout(self.step2)
+        self.step2_layout.setContentsMargins(0, 0, 0, 0)
+        self.stack.addWidget(self.step2)
+        
+        layout.addWidget(self.stack)
 
-        layout.addLayout(form_layout)
+    def setup_step1(self):
+        layout = QVBoxLayout(self.step1)
+        layout.setSpacing(20)
 
-        # PRD 3.2: 底部按钮 (使用标准按钮盒)
-        self.button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.button_box.button(QDialogButtonBox.StandardButton.Save).setText("保存")
-        self.button_box.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
+        hint = QLabel("Select item type:")
+        hint.setStyleSheet("font-size: 14px;")
+        layout.addWidget(hint)
 
-        # 连接 "保存" 和 "取消" 信号
-        self.button_box.accepted.connect(self.accept) # 内置的 "accept"
-        self.button_box.rejected.connect(self.reject) # 内置的 "reject"
+        self.type_combo = QComboBox()
+        self.type_combo.setMinimumHeight(40)
+        for t in self._item_types:
+            self.type_combo.addItem(t['name'], t)
+        layout.addWidget(self.type_combo)
 
-        layout.addWidget(self.button_box)
+        layout.addStretch()
+
+        nav = QHBoxLayout()
+        nav.addStretch()
+        
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setMinimumHeight(40)
+        cancel_btn.clicked.connect(self.reject)
+        nav.addWidget(cancel_btn)
+        
+        next_btn = QPushButton("Next")
+        next_btn.setObjectName("PrimaryButton")
+        next_btn.setMinimumHeight(40)
+        next_btn.clicked.connect(self.go_to_step2)
+        nav.addWidget(next_btn)
+        
+        layout.addLayout(nav)
+
+    def go_to_step2(self):
+        self._selected_type = self.type_combo.currentData()
+        if not self._selected_type:
+            QMessageBox.warning(self, "Error", "Please select an item type")
+            return
+        
+        self.build_step2_form()
+        self.stack.setCurrentIndex(1)
+
+    def build_step2_form(self):
+        while self.step2_layout.count():
+            child = self.step2_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+        
+        self._custom_inputs.clear()
+        
+        form = QFormLayout()
+        form.setSpacing(12)
+
+        type_label = QLabel(f"Type: {self._selected_type['name']}")
+        type_label.setStyleSheet("font-weight: bold; color: #3498DB; margin-bottom: 10px;")
+        self.step2_layout.addWidget(type_label)
+
+        self.name_input = QLineEdit()
+        self.name_input.setPlaceholderText("Item name")
+        self.name_input.setMinimumHeight(35)
+        form.addRow("Name *", self.name_input)
+
+        self.desc_input = QTextEdit()
+        self.desc_input.setPlaceholderText("Description")
+        self.desc_input.setMaximumHeight(80)
+        form.addRow("Description", self.desc_input)
+
+        self.location_input = QLineEdit()
+        self.location_input.setPlaceholderText("e.g. Dorm Building 5")
+        self.location_input.setMinimumHeight(35)
+        form.addRow("Location *", self.location_input)
+
+        self.phone_input = QLineEdit()
+        self.phone_input.setPlaceholderText("Phone number")
+        self.phone_input.setMinimumHeight(35)
+        form.addRow("Phone *", self.phone_input)
+
+        self.email_input = QLineEdit()
+        self.email_input.setPlaceholderText("Email address")
+        self.email_input.setMinimumHeight(35)
+        form.addRow("Email", self.email_input)
+
+        custom_attrs = self._selected_type.get('custom_attributes', [])
+        if custom_attrs:
+            separator = QLabel("-- Type-specific attributes --")
+            separator.setStyleSheet("color: #7F8C8D; margin-top: 10px;")
+            separator.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            form.addRow(separator)
+
+        for attr in custom_attrs:
+            attr_name = attr['name']
+            attr_type = attr.get('type', 'text')
+            
+            if attr_type == 'number':
+                widget = QLineEdit()
+                widget.setPlaceholderText("Number")
+                widget.setMinimumHeight(35)
+            elif attr_type == 'date':
+                widget = QDateEdit()
+                widget.setCalendarPopup(True)
+                widget.setDate(QDate.currentDate())
+                widget.setMinimumHeight(35)
+            else:
+                widget = QLineEdit()
+                widget.setPlaceholderText(attr_name)
+                widget.setMinimumHeight(35)
+            
+            self._custom_inputs[attr_name] = widget
+            form.addRow(f"{attr_name}", widget)
+
+        self.step2_layout.addLayout(form)
+        self.step2_layout.addStretch()
+
+        nav = QHBoxLayout()
+        
+        back_btn = QPushButton("Back")
+        back_btn.setMinimumHeight(40)
+        back_btn.clicked.connect(lambda: self.stack.setCurrentIndex(0))
+        nav.addWidget(back_btn)
+        
+        nav.addStretch()
+        
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setMinimumHeight(40)
+        cancel_btn.clicked.connect(self.reject)
+        nav.addWidget(cancel_btn)
+        
+        save_btn = QPushButton("Post")
+        save_btn.setObjectName("PrimaryButton")
+        save_btn.setMinimumHeight(40)
+        save_btn.clicked.connect(self.on_save)
+        nav.addWidget(save_btn)
+        
+        self.step2_layout.addLayout(nav)
 
     def get_data(self) -> dict:
-        """辅助方法：从表单控件中获取数据。"""
+        custom_values = {}
+        for attr_name, widget in self._custom_inputs.items():
+            if isinstance(widget, QDateEdit):
+                custom_values[attr_name] = widget.date().toString("yyyy-MM-dd")
+            else:
+                custom_values[attr_name] = widget.text().strip()
+        
         return {
-            "name": self.name_edit.text().strip(),
-            "description": self.desc_edit.toPlainText().strip(),
-            "contact": self.contact_edit.text().strip()
+            "type_id": self._selected_type['id'],
+            "name": self.name_input.text().strip(),
+            "description": self.desc_input.toPlainText().strip(),
+            "location": self.location_input.text().strip(),
+            "contact_phone": self.phone_input.text().strip(),
+            "contact_email": self.email_input.text().strip(),
+            "custom_values": custom_values
         }
 
     def validate_input(self) -> bool:
-        """PRD FR-002: 校验必填项。"""
         data = self.get_data()
-        if not data["name"] or not data["contact"]:
+        if not data["name"]:
+            QMessageBox.warning(self, "Notice", "Please enter item name")
+            return False
+        if not data["location"]:
+            QMessageBox.warning(self, "Notice", "Please enter location")
+            return False
+        if not data["contact_phone"]:
+            QMessageBox.warning(self, "Notice", "Please enter phone number")
             return False
         return True
 
-    # 重写 accept() 方法以在 "保存" 时加入校验
-    def accept(self):
+    def on_save(self):
         if self.validate_input():
-            # 校验通过，调用父类的 accept()，关闭对话框并返回 QDialog.DialogCode.Accepted
-            super().accept()
-        else:
-            # 校验失败，显示警告，不关闭对话框
-            QMessageBox.warning(
-                self, 
-                "信息不完整", 
-                "“物品名称”和“联系信息”是必填项。"
-            )
+            self.accept()

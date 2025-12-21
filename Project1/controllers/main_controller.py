@@ -1,115 +1,186 @@
+# -*- coding: utf-8 -*-
 # controllers/main_controller.py
-# 切换到 PyQt5: from PyQt5.QtWidgets import QMessageBox
-from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtCore import QObject # Controller 可以是 QObject 
+"""
+Main Controller: Orchestrates the application flow.
+"""
+from PyQt6.QtWidgets import QMessageBox, QStackedWidget
+from PyQt6.QtCore import QObject
 
-from model.data_manager import CsvDataManager
+from model.item_manager import ItemManager
+from model.item_type_manager import ItemTypeManager
+from model.user_manager import UserManager
+
+from controllers.auth_controller import AuthController
+from controllers.admin_controller import AdminController
+
 from views.main_window import MainWindow
+from views.login_dialog import LoginDialog
+from views.register_dialog import RegisterDialog
+from views.admin_panel import AdminPanel
 from views.add_item_dialog import AddItemDialog
 
 class MainController(QObject):
-    """
-    PRD 4.3: Controller (控制层)
-    连接 View (视图) 和 Model (数据)。
-    处理按钮点击事件，调用 CsvDataManager 的方法，并更新 View。
-    """
-    def __init__(self):
+    """Main application controller."""
+    
+    def __init__(self, stacked_widget: QStackedWidget):
         super().__init__()
         
-        # PRD 4.3: 实例化 M 和 V
-        self.model = CsvDataManager()
-        self.view = MainWindow()
+        self.stack = stacked_widget
+        
+        # Models
+        self.item_manager = ItemManager()
+        self.type_manager = ItemTypeManager()
+        self.user_manager = UserManager()
+        
+        # Controllers
+        self.auth_controller = AuthController()
+        self.admin_controller = AdminController()
+        
+        # Views
+        self.login_dialog = LoginDialog()
+        self.register_dialog = RegisterDialog()
+        self.main_window = MainWindow()
+        self.admin_panel = AdminPanel()
+        
+        # Add views to stack
+        self.stack.addWidget(self.login_dialog)
+        self.stack.addWidget(self.register_dialog)
+        self.stack.addWidget(self.main_window)
+        self.stack.addWidget(self.admin_panel)
+        
+        # Connect signals
+        self._connect_auth_signals()
+        self._connect_main_signals()
+        self._connect_admin_signals()
 
-        # --- 核心：连接 View 的信号(signals) 到 Controller 的槽(slots) ---
-        self.view.add_item_requested.connect(self.show_add_item_dialog)
-        self.view.delete_item_requested.connect(self.handle_delete_item)
-        self.view.search_requested.connect(self.handle_search)
-        self.view.clear_search_requested.connect(self.handle_clear_search)
+    def _connect_auth_signals(self):
+        self.login_dialog.login_requested.connect(self.auth_controller.login)
+        self.login_dialog.register_requested.connect(self.show_register)
+        self.auth_controller.login_success.connect(self.on_login_success)
+        self.auth_controller.login_failed.connect(self.login_dialog.show_error)
+        
+        self.register_dialog.register_requested.connect(self.auth_controller.register)
+        self.auth_controller.register_success.connect(self.register_dialog.show_success)
+        self.auth_controller.register_failed.connect(self.register_dialog.show_error)
 
-        # 初始加载数据
-        self.refresh_table_view()
+    def _connect_main_signals(self):
+        self.main_window.logout_requested.connect(self.on_logout)
+        self.main_window.admin_panel_requested.connect(self.show_admin_panel)
+        self.main_window.category_changed.connect(self.load_items_by_type)
+        self.main_window.search_requested.connect(self.handle_search)
+        self.main_window.add_item_requested.connect(self.show_add_item_dialog)
+        self.main_window.delete_item_requested.connect(self.handle_delete_item)
+
+    def _connect_admin_signals(self):
+        self.admin_panel.back_requested.connect(self.show_main_window)
+        self.admin_panel.type_created.connect(self.admin_controller.create_type)
+        self.admin_panel.type_updated.connect(self.admin_controller.update_type)
+        self.admin_panel.type_deleted.connect(self.admin_controller.delete_type)
+        self.admin_panel.user_approved.connect(self.admin_controller.approve_user)
+        self.admin_panel.user_rejected.connect(self.admin_controller.reject_user)
+        
+        self.admin_controller.types_updated.connect(self.refresh_admin_types)
+        self.admin_controller.users_updated.connect(self.refresh_admin_users)
+        self.admin_controller.error_occurred.connect(
+            lambda msg: QMessageBox.warning(self.admin_panel, "Error", msg)
+        )
 
     def run(self):
-        """启动应用，显示主窗口。"""
-        self.view.show()
+        """Start the application."""
+        self.stack.setCurrentWidget(self.login_dialog)
+        self.stack.show()
 
-    def refresh_table_view(self):
-        """从模型加载所有数据并更新视图。"""
-        all_items = self.model.get_all_items()
-        self.view.update_view(all_items)
+    def on_login_success(self, user: dict):
+        self.login_dialog.clear_inputs()
+        self.main_window.set_current_user(user)
+        
+        types = self.type_manager.get_all_types()
+        self.main_window.set_item_types(types)
+        
+        self.show_main_window()
 
-    # --- 槽函数 (Slots) ---
+    def on_logout(self):
+        self.auth_controller.logout()
+        self.main_window.set_current_user(None)
+        self.stack.setCurrentWidget(self.login_dialog)
+
+    def show_register(self):
+        self.stack.setCurrentWidget(self.register_dialog)
+
+    def show_main_window(self):
+        types = self.type_manager.get_all_types()
+        self.main_window.set_item_types(types)
+        self.stack.setCurrentWidget(self.main_window)
+
+    def load_items_by_type(self, type_id: int):
+        items = self.item_manager.get_items_by_type(type_id)
+        self.main_window.update_view(items)
+
+    def handle_search(self, type_id: int, keyword: str):
+        if keyword:
+            items = self.item_manager.search_items(type_id, keyword)
+        else:
+            items = self.item_manager.get_items_by_type(type_id)
+        self.main_window.update_view(items)
 
     def show_add_item_dialog(self):
-        """
-        处理 FR-002: 添加物品
-        """
-        # 创建并显示对话框
-        dialog = AddItemDialog(self.view)
+        types = self.type_manager.get_all_types()
+        if not types:
+            QMessageBox.warning(
+                self.main_window, "Notice",
+                "No item types available. Please contact admin."
+            )
+            return
         
-        # .exec() 会阻塞，直到对话框关闭
-        if dialog.exec(): # QDialog.DialogCode.Accepted (用户点击了"保存"且校验通过)
+        dialog = AddItemDialog(self.main_window, types)
+        if dialog.exec():
             data = dialog.get_data()
+            user = self.auth_controller.get_current_user()
             
-            # 1. 调用 Model 添加数据
-            self.model.add_item(
-                name=data["name"],
-                description=data["description"],
-                contact_info=data["contact"]
+            self.item_manager.add_item(
+                type_id=data['type_id'],
+                owner_id=user['id'],
+                name=data['name'],
+                description=data['description'],
+                location=data['location'],
+                contact_phone=data['contact_phone'],
+                contact_email=data['contact_email'],
+                custom_values=data['custom_values']
             )
             
-            # 2. PRD 4.2.2: 立即将内存列表写回 CSV
-            self.model.save_data()
-            
-            # 3. FR-001: 刷新主界面的物品列表
-            self.refresh_table_view()
+            current_type_id = self.main_window.get_selected_type_id()
+            self.load_items_by_type(current_type_id)
 
-    def handle_delete_item(self, item_id: str):
-        """
-        处理 FR-003: 删除物品
-        """
-        item_name = self.view.get_selected_item_name() or "Selected Item"
-
-        # PRD 3.3: 安全确认
+    def handle_delete_item(self, item_id: int):
+        item_name = self.main_window.get_selected_item_name() or "this item"
+        user = self.auth_controller.get_current_user()
+        
         reply = QMessageBox.warning(
-            self.view,
-            "确认删除", # 标题
-            f"您确定要删除「{item_name}」吗？\n此操作不可撤销。", # 内容
+            self.main_window,
+            "Confirm Delete",
+            f"Are you sure you want to delete '{item_name}'?\nThis cannot be undone.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No # 默认焦点在 "No"
+            QMessageBox.StandardButton.No
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            # 1. 调用 Model 删除
-            deleted = self.model.delete_item(item_id)
-            
-            if deleted:
-                # 2. PRD 4.2.2: 立即写回
-                self.model.save_data()
-                # 3. FR-001: 刷新列表
-                self.refresh_table_view()
+            if self.auth_controller.is_admin():
+                self.item_manager.delete_item(item_id)
             else:
-                # 理论上不应该发生，因为 ID 来自 UI
-                QMessageBox.critical(self.view, "错误", "删除失败：未在数据中找到该物品。")
+                self.item_manager.delete_item(item_id, user['id'])
+            
+            current_type_id = self.main_window.get_selected_type_id()
+            self.load_items_by_type(current_type_id)
 
-    def handle_search(self, keyword: str):
-        """
-        处理 FR-004: 查找物品
-        """
-        if not keyword:
-            self.refresh_table_view()
-            return
-        
-        # 1. 调用 Model 在内存中搜索
-        results = self.model.search_items(keyword)
-        
-        # 2. FR-001: 列表应刷新，仅显示结果
-        self.view.update_view(results)
+    def show_admin_panel(self):
+        self.refresh_admin_types()
+        self.refresh_admin_users()
+        self.stack.setCurrentWidget(self.admin_panel)
 
-    def handle_clear_search(self):
-        """
-        处理 FR-004: 清除/重置
-        """
-        # 注意：View 已经自己清除了输入框 (在 on_clear_search_clicked 中)
-        # 我们只需要刷新列表以显示所有物品
-        self.refresh_table_view()
+    def refresh_admin_types(self):
+        types = self.admin_controller.get_all_types()
+        self.admin_panel.update_types(types)
+
+    def refresh_admin_users(self):
+        users = self.admin_controller.get_pending_users()
+        self.admin_panel.update_pending_users(users)
