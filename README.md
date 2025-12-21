@@ -1,16 +1,12 @@
 # 校园咸鱼 V1.0 
 
-# ![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
 ![Framework](https://img.shields.io/badge/Framework-PyQt6-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)
 
 “校园咸鱼”是一个轻量级的桌面应用程序，旨在帮助大学生快速发布和查找校内闲置物品。
 
-本项目是基于 [V1.0 产品需求文档 (PRD)](#) 的一份完整 Python 实现，严格遵循 PRD 中定义的功能需求、技术栈和 MVC 架构。
-
 ## V1.0 核心功能 (PRD 2.0)
-
-本项目已实现 PRD V1.0 的核心功能闭环：**发布 -> 浏览 -> 查找 -> 联系**。
 
 * **FR-001: 物品列表展示**：
     * 主界面以表格形式展示所有物品（名称、描述、联系方式）。
@@ -29,10 +25,40 @@
 ## 技术栈与架构 (PRD 4.0)
 
 * **语言**: Python 3.x
-* **GUI 框架**: PyQt6 (可轻松兼容 PyQt5)
+* **GUI 框架**: PyQt6 
 * **数据存储**: 本地 `items.csv` 文件 (V1.0 方案，使用 `uuid` 作为唯一ID)
 * **核心架构**: MVC (Model-View-Controller) 模式
 
-## 项目结构 (PRD 4.3)
+## 快速开始 (Getting Started)
 
-本项目严格按照 MVC 模式进行功能拆分，确保了数据逻辑与 UI 视图的分离。
+1.  **克隆仓库**
+    ```bash
+    git clone [仓库URL]
+    cd [仓库目录]
+    ```
+
+2.  **创建并激活虚拟环境** (推荐)
+    ```bash
+    # Windows
+    python -m venv venv
+    .\venv\Scripts\activate
+    
+    # macOS/Linux
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+3.  **安装依赖**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **运行程序**
+    ```bash
+    python main.py
+    ```
+    程序将在项目根目录自动创建 `items.csv` 文件用于存储数据。
+
+## 许可证 (License)
+
+本项目采用 [MIT License](LICENSE) 授权。
